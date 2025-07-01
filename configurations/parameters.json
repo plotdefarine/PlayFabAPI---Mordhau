@@ -1,0 +1,11 @@
+{
+  "InfoRequestParameters": {
+    "GetUserAccountInfo": true,
+    "GetPlayerProfile": true,
+    "GetPlayerStatistics": true,
+    "GetUserData": true,
+    "GetUserReadOnlyData": true,
+    "GetUserInventory": false,
+    "GetUserVirtualCurrency": false
+  }
+}
