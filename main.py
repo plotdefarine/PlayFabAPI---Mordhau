@@ -11,18 +11,18 @@ async def run_fetch_process():
     session_ticket = config.get("playfab", "session_ticket")
 
     if not session_ticket.strip():
-        print("[🔄] Aucun session_ticket détecté, connexion à PlayFab (CustomID)...")
+        print("[🔄] No session_ticket detected, connection to PlayFab (CustomID)...")
         session_ticket = await get_session_ticket()
         config.set("playfab", "session_ticket", session_ticket)
         with open(config_path, "w") as f:
             config.write(f)
-        print("[✅] Nouveau session_ticket obtenu et enregistré.")
+        print("[✅] New session_ticket obtained and saved.")
 
     gateway = gatewayAPI(config_path=config_path)
 
     await gateway.run()
 
-    print("\n✅ Processus terminé.")
+    print("\n✅ Process completed.")
 
 if __name__ == "__main__":
     asyncio.run(run_fetch_process())
