@@ -64,7 +64,7 @@ CREATE TABLE playfab_player_info (
 | Field         | Description                                      |
 |---------------|--------------------------------------------------|
 | playfab_id    | Unique PlayFab player ID (primary key)           |
-| id            | Player's Steam ID (if available)                 |
+| id            | Player's Epic Games ID / Steam ID (if available) |
 | platform      | Player’s platform (e.g., Steam, Epic)            |
 | username      | Username as defined in PlayFab                   |
 | entity_id     | Player's EntityID (used internally by PlayFab)   |
