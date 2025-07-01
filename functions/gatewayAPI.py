@@ -75,7 +75,7 @@ class gatewayAPI:
                                 json.dumps(player["stats"])
                             )
                         )
-                        print(f'[💾] Enregistré : {player["username"]}')
+                        print(f'[💾] Registered : {player["username"]}')
                     except Exception as e:
                         print(f"[⚠️] Insertion failure: {player.get('playfab_id', '?')} -> {str(e)}")
 
