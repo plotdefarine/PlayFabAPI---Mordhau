@@ -87,15 +87,21 @@ class PlayFabFetcher:
 
                     entry = {
                         "playfab_id": readonly_data.get("PlayFabId"),
-                        "steam_id": readonly_data.get("PlatformAccountId"),
+                        "id": readonly_data.get("PlatformAccountId"),
                         "platform": readonly_data.get("Platform"),
                         "username": readonly_data.get("Name"),
                         "entity_id": readonly_data.get("EntityId"),
                         "created_at": self.format_iso_to_sql_datetime(info.get("AccountInfo", {}).get("Created")),
                         "stats": stats
                     }
+                    if not entry["playfab_id"]:
+                        raise ValueError("PlayFabId is missing in the response.")
+                    
+                    if not entry.get("id"):
+                        raise ValueError("Missing ID for PlayFabID: " + entry.get("playfab_id", "?"))
 
-                    print(f'✅ Player: "{entry["username"]}" | PlayFabID: {entry["playfab_id"]} | ID: {entry["steam_id"]} | Status: OK')
+
+                    print(f'✅ Player: "{entry["username"]}" | PlayFabID: {entry["playfab_id"]} | ID: {entry["id"]} | Status: OK')
                     return entry
 
                 except Exception as e:
