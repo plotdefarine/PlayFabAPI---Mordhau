@@ -6,13 +6,14 @@ from datetime import datetime
 from pathlib import Path
 
 class PlayFabFetcher:
-    def __init__(self, pool, session_ticket: str, title_id: str, sql_query: str, parameters_path: str = "configurations/parameters.json"):
+    def __init__(self, pool, session_ticket: str, title_id: str, sql_query: str, config=None):
         self.pool = pool
         self.session_ticket = session_ticket
         self.title_id = title_id
         self.sql_query = sql_query
-        self.parameters = self.load_info_request_parameters(parameters_path)
+        self.parameters = self.load_info_request_parameters("configurations/parameters.json")
         self.memory_buffer = []
+        self.config = config  # Ajout de la config
         
     @staticmethod
     def format_iso_to_sql_datetime(iso_str: str) -> str:
@@ -56,13 +57,31 @@ class PlayFabFetcher:
                     data = await response.json()
                     raise Exception(data.get("errorMessage", "Erreur inconnue"))
 
-    async def collect_all(self) -> list:
-        async with self.pool.acquire() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute(self.sql_query)
-                rows = await cur.fetchall()
-                playfab_ids = [row[0] for row in rows]
+    async def get_playfab_ids(self):
+        # Choix de la source selon la config
+        source = "database"
+        manual_file = None
+        if self.config and self.config.has_section("input"):
+            source = self.config.get("input", "source", fallback="database")
+            manual_file = self.config.get("input", "manual_file", fallback="configurations/manual_playfabids.txt")
+        if source == "manual_file":
+            # Charger les IDs depuis le fichier
+            if not Path(manual_file).exists():
+                raise FileNotFoundError(f"Manual PlayFabIDs file not found: {manual_file}")
+            with open(manual_file, "r") as f:
+                playfab_ids = [line.strip() for line in f if line.strip()]
+            return playfab_ids
+        else:
+            # Charger depuis la base de données
+            async with self.pool.acquire() as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(self.sql_query)
+                    rows = await cur.fetchall()
+                    playfab_ids = [row[0] for row in rows]
+            return playfab_ids
 
+    async def collect_all(self) -> list:
+        playfab_ids = await self.get_playfab_ids()
         semaphore = asyncio.Semaphore(12)
 
         async def limited_fetch(playfab_id: str):
