@@ -1,11 +1,11 @@
-# 📘 README – PlayFab Info Collector (PlayFabAPI)
+# README – PlayFab Info Collector (PlayFabAPI)
 
 This project retrieves player information using the PlayFab GetPlayerCombinedInfo API and stores the data into a MariaDB database.  
 It is designed for asynchronous batch processing of player statistics, especially suited for Mordhau server owners and community managers.
 
 ---
 
-# 🛠️ Project Status
+# Project Status
 
 This is an **open-source** and **incomplete** project.  
 Originally planned to include interaction with the **Steam Web API** to gather additional metadata (e.g., player profile, ban status, hours played, etc.).  
@@ -15,7 +15,7 @@ Feel free to contribute or fork the project!
 
 ---
 
-## 📂 Configuration – `config.ini`
+## Configuration – `config.ini`
 
 The `config.ini` file centralizes all essential configuration. It is divided into four sections:
 
@@ -36,17 +36,18 @@ get_playfab_ids = SELECT PlayFabId FROM playerlist
 title_id = 12D56                        ; Your PlayFab Game Title ID
 custom_id = custom_name                 ; CustomID used for login (any string)
 session_ticket = ...                    ; SessionTicket (auto-refreshed)
+semaphore_limit = 10                    ; Controls the max concurrent API calls
 
 [input]
 source = database                       ; Either 'database' or 'manual_file'
 manual_file = configurations/manual_playfabids.txt  ; Path to manual ID file
 ```
 
-💡 Tip: Use `getSessionTicket.py` to regenerate a fresh `session_ticket` using your `custom_id`.
+Tip: Use `getSessionTicket.py` to regenerate a fresh `session_ticket` using your `custom_id`.
 
 ---
 
-## ✍️ Manual Input Support (New)
+## Manual Input Support
 
 You can now bypass the database and directly fetch PlayFab data by writing raw PlayFabIDs manually into a text file.
 
@@ -54,7 +55,7 @@ You can now bypass the database and directly fetch PlayFab data by writing raw P
   ```ini
   source = manual_file
   ```
-- Then write your PlayFabIDs into `manual_playfabids.txt`, **one ID per line**, like this:
+- Then write your PlayFabIDs into `manual_playfabids.txt`, one ID per line, like this:
 
   ```
   ABC1234567890
@@ -66,7 +67,7 @@ This mode is especially useful for testing or quick lookups without configuring 
 
 ---
 
-## 🗄️ Database Table – `playfab_player_info`
+## Database Table – `playfab_player_info`
 
 In MariaDB:
 
@@ -98,22 +99,22 @@ CREATE TABLE playfab_player_info (
 
 ---
 
-## ⏱️ API Rate Limiting – How to manage it
+## API Rate Limiting – How to manage it
 
-PlayFab enforces a **maximum of 10–20 requests per second**.
+PlayFab enforces a maximum of 10–20 requests per second.
 
-To stay under this threshold, this project uses an `asyncio.Semaphore` to limit concurrent API calls:
+To stay under this threshold, this project uses an `asyncio.Semaphore` to limit concurrent API calls. The limit can be set in `config.ini`:
 
-```python
-# Located in GetPlayFabAPI.py
-semaphore = asyncio.Semaphore(12)
+```ini
+[playfab]
+semaphore_limit = 12
 ```
 
 You can increase or decrease this value depending on your use case.
 
 ---
 
-## 🔐 Security Best Practices
+## Security Best Practices
 
 1. **Table name safety**  
    Ensure the table name in `config.ini` is a valid SQL identifier.
@@ -126,7 +127,7 @@ You can increase or decrease this value depending on your use case.
 
 ---
 
-## 🧪 Recommended Testing
+## Recommended Testing
 
 - Run with 100+ PlayFab IDs to verify concurrency handling.
 - Make sure your session ticket is valid and active during long runs.
@@ -134,7 +135,7 @@ You can increase or decrease this value depending on your use case.
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 Install the required Python libraries with:
 
@@ -144,9 +145,9 @@ pip install aiomysql aiohttp
 
 ---
 
-# ✍️ Author
+# Author
 
 A small project by **Plotdefarine (also known in the Mordhau community as Needyy)**, created to asynchronously collect and store player information from PlayFab into MariaDB.
 
-- Gmail: `plotdefarine@gmail.com`  
-- Website: [https://needys-community.com](https://needys-community.com)
+- Gmail: plotdefarine@gmail.com  
+- Website: https://needys-community.com
