@@ -82,7 +82,14 @@ class PlayFabFetcher:
 
     async def collect_all(self) -> list:
         playfab_ids = await self.get_playfab_ids()
-        semaphore = asyncio.Semaphore(12)
+        semaphore_value = 10 # Default value if not set in config
+        if self.config and self.config.has_section("playfab"):
+            try:
+                semaphore_value = self.config.getint("playfab", "semaphore_limit", fallback=12)
+            except ValueError:
+                print("[Warning] Invalid value for semaphore_limit in config.ini. Using default: 12")
+
+        semaphore = asyncio.Semaphore(semaphore_value)
 
         async def limited_fetch(playfab_id: str):
             async with semaphore:
