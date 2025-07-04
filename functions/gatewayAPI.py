@@ -36,7 +36,8 @@ class gatewayAPI:
             pool=self.pool,
             session_ticket=self.session_ticket,
             title_id=self.title_id,
-            sql_query=self.sql_query
+            sql_query=self.sql_query,
+            config=self.config  # Passer la config ici
         )
 
         # self.steam_fetcher = SteamFetcher(...)
