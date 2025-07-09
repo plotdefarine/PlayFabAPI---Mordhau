@@ -33,7 +33,7 @@ get_playfab_ids = SELECT PlayFabId FROM playerlist
 ; SQL query to retrieve PlayFab IDs from your database
 
 [playfab]
-title_id = 12D56                        ; Your PlayFab Game Title ID
+title_id = 12D56                        ; Mordhau PlayFab Title ID
 custom_id = custom_name                 ; CustomID used for login (any string)
 session_ticket = ...                    ; SessionTicket (auto-refreshed)
 semaphore_limit = 10                    ; Controls the max concurrent API calls
