@@ -2,6 +2,7 @@ import aiohttp
 import aiomysql
 import asyncio
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -87,7 +88,7 @@ class PlayFabFetcher:
             try:
                 semaphore_value = self.config.getint("playfab", "semaphore_limit", fallback=12)
             except ValueError:
-                print("[Warning] Invalid value for semaphore_limit in config.ini. Using default: 12")
+                logging.getLogger("playfab.fetcher").warning("Invalid value for semaphore_limit in config.ini. Using default: 12")
 
         semaphore = asyncio.Semaphore(semaphore_value)
 
@@ -127,11 +128,11 @@ class PlayFabFetcher:
                         raise ValueError("Missing ID for PlayFabID: " + entry.get("playfab_id", "?"))
 
 
-                    print(f'✅ Player: "{entry["username"]}" | PlayFabID: {entry["playfab_id"]} | ID: {entry["id"]} | Status: OK')
+                    logging.getLogger("playfab.fetcher").info(f'Player: "{entry["username"]}" | PlayFabID: {entry["playfab_id"]} | ID: {entry["id"]} | Status: OK')
                     return entry
 
                 except Exception as e:
-                    print(f'❌ Player: "?" | PlayFabID: {playfab_id} | SteamID: "?" | Status: {str(e)}')
+                    logging.getLogger("playfab.fetcher").warning(f'Player: "?" | PlayFabID: {playfab_id} | SteamID: "?" | Status: {str(e)}')
                     return None
 
         tasks = [limited_fetch(pid) for pid in playfab_ids]

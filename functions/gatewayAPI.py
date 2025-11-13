@@ -2,6 +2,8 @@ import aiomysql
 from configparser import ConfigParser
 from functions.GetPlayFabAPI import PlayFabFetcher
 import json
+import logging
+import os
 # from functions.GetSteamAPI import SteamFetcher
 
 class gatewayAPI:
@@ -32,7 +34,13 @@ class gatewayAPI:
                 autocommit=True
             )
         else:
-            print(f"[📝] Sauvegarde en mode: {destination}")
+            log = logging.getLogger("gateway")
+            # ensure logs directory exists in case called independently
+            try:
+                os.makedirs("logs", exist_ok=True)
+            except Exception:
+                pass
+            log.info(f"Sauvegarde en mode: {destination}")
 
     async def run(self):
         if not self.pool:
@@ -48,10 +56,10 @@ class gatewayAPI:
 
         # self.steam_fetcher = SteamFetcher(...)
 
-        print("[📡] Lancement de la collecte PlayFab...")
+        log = logging.getLogger("gateway")
+        log.info("Lancement de la collecte PlayFab...")
         playfab_data = await self.playfab_fetcher.collect_all()
-
-        print(f"[🧠] {len(playfab_data)} players collected from PlayFab.")
+        log.info(f"{len(playfab_data)} players collected from PlayFab.")
         await self.insert_into_database(playfab_data)
 
     async def insert_into_database(self, data: list):
@@ -91,9 +99,9 @@ class gatewayAPI:
                                 json.dumps(player["stats"])
                             )
                         )
-                        print(f'[💾] Registered : {player["username"]}')
+                        logging.getLogger("gateway").info(f'Registered : {player["username"]}')
                     except Exception as e:
-                        print(f"[⚠️] Insertion failure: {player.get('playfab_id', '?')} -> {str(e)}")
+                        logging.getLogger("gateway").warning(f"Insertion failure: {player.get('playfab_id', '?')} -> {str(e)}")
 
     async def _insert_into_txt_file(self, data: list):
         """Sauvegarde dans un fichier txt"""
@@ -105,11 +113,11 @@ class gatewayAPI:
                     try:
                         player_json = json.dumps(player, ensure_ascii=False)
                         f.write(player_json + "\n")
-                        print(f'[💾] Saved to file : {player["username"]}')
+                        logging.getLogger("gateway").info(f'Saved to file : {player["username"]}')
                     except Exception as e:
-                        print(f"[⚠️] Save failure: {player.get('playfab_id', '?')} -> {str(e)}")
+                        logging.getLogger("gateway").warning(f"Save failure: {player.get('playfab_id', '?')} -> {str(e)}")
         except Exception as e:
-            print(f"[❌] Error writing to file {txt_file_path}: {str(e)}")
+            logging.getLogger("gateway").error(f"Error writing to file {txt_file_path}: {str(e)}")
 
     async def close(self):
         if self.pool:
