@@ -39,7 +39,7 @@ class PlayFabFetcher:
             return json.load(f).get("InfoRequestParameters", {})
 
     async def fetch_single_player(self, playfab_id: str) -> dict:
-        url = f"https://{self.title_id}.playfabapi.com/Client/GetPlayerCombinedInfo"
+        url = f"https://{self.title_id.lower()}.playfabapi.com/Client/GetPlayerCombinedInfo"
         headers = {
             "Content-Type": "application/json",
             "X-Authorization": self.session_ticket

@@ -17,7 +17,7 @@ Feel free to contribute or fork the project!
 
 ## Configuration – `config.ini`
 
-The `config.ini` file centralizes all essential configuration. It is divided into four sections:
+The `config.ini` file centralizes all essential configuration. It is divided into six sections:
 
 ```ini
 [database]
@@ -39,11 +39,88 @@ session_ticket = ...                    ; SessionTicket (auto-refreshed)
 semaphore_limit = 10                    ; Controls the max concurrent API calls
 
 [input]
-source = database                       ; Either 'database' or 'manual_file'
+source = manual_file                    ; Either 'database' or 'manual_file'
 manual_file = configurations/manual_playfabids.txt  ; Path to manual ID file
+
+[output]
+destination = txt_file                  ; Either 'database' or 'txt_file'
+txt_file = configurations/saved_playfabids.txt     ; Path to local save file
 ```
 
 Tip: Use `getSessionTicket.py` to regenerate a fresh `session_ticket` using your `custom_id`.
+
+---
+
+## Input & Output Modes
+
+This project now supports **flexible data flow**:
+
+### Input Sources
+
+#### 1. **Database Mode** (`source = database`)
+Fetch PlayFab IDs from your MariaDB database using the SQL query defined in `config.ini`:
+
+```ini
+[input]
+source = database
+```
+
+The application will execute the `get_playfab_ids` query to retrieve all PlayFab IDs from your database.
+
+#### 2. **Manual File Mode** (`source = manual_file`)
+Fetch PlayFab IDs from a local text file instead of a database:
+
+```ini
+[input]
+source = manual_file
+manual_file = configurations/manual_playfabids.txt
+```
+
+Write your PlayFabIDs into `manual_playfabids.txt`, one ID per line:
+
+```
+ABC1234567890
+XYZ9876543210
+QWE1122334455
+```
+
+This mode is especially useful for testing, quick lookups, or when you don't have a database configured.
+
+---
+
+### Output Destinations
+
+#### 1. **Database Mode** (`destination = database`)
+Save all collected player data directly into your MariaDB database:
+
+```ini
+[output]
+destination = database
+```
+
+Data is inserted into the `playfab_player_info` table with all player stats and metadata.
+
+#### 2. **Text File Mode** (`destination = txt_file`)
+Save all collected player data as JSON lines into a local text file:
+
+```ini
+[output]
+destination = txt_file
+txt_file = configurations/saved_playfabids.txt
+```
+
+Each line of `saved_playfabids.txt` contains a complete JSON object with player information:
+
+```json
+{"playfab_id":"ABC1234567890","id":"STEAM_0:1:123456","platform":"Steam","username":"PlayerName","entity_id":"...","created_at":"2024-01-15 10:30:00","stats":{"DuelRank":1500,...}}
+{"playfab_id":"XYZ9876543210","id":"STEAM_0:0:654321","platform":"Steam","username":"OtherPlayer","entity_id":"...","created_at":"2024-02-20 14:45:00","stats":{"DuelRank":1200,...}}
+```
+
+This mode is perfect for:
+- Local development and testing
+- Avoiding database dependencies
+- Archiving player data as structured JSON
+- Post-processing data with other tools
 
 ---
 
@@ -64,8 +141,6 @@ You can now bypass the database and directly fetch PlayFab data by writing raw P
   ```
 
 This mode is especially useful for testing or quick lookups without configuring a full database.
-
----
 
 ## Database Table – `playfab_player_info`
 

@@ -19,14 +19,20 @@ class gatewayAPI:
         # self.steam_fetcher = None
 
     async def init_pool(self):
-        self.pool = await aiomysql.create_pool(
-            host=self.config.get("database", "host"),
-            port=self.config.getint("database", "port"),
-            user=self.config.get("database", "user"),
-            password=self.config.get("database", "password"),
-            db=self.config.get("database", "database"),
-            autocommit=True
-        )
+        destination = self.config.get("output", "destination", fallback="database")
+        
+        # Only initialize pool if using database destination
+        if destination == "database":
+            self.pool = await aiomysql.create_pool(
+                host=self.config.get("database", "host"),
+                port=self.config.getint("database", "port"),
+                user=self.config.get("database", "user"),
+                password=self.config.get("database", "password"),
+                db=self.config.get("database", "database"),
+                autocommit=True
+            )
+        else:
+            print(f"[📝] Sauvegarde en mode: {destination}")
 
     async def run(self):
         if not self.pool:
@@ -49,6 +55,15 @@ class gatewayAPI:
         await self.insert_into_database(playfab_data)
 
     async def insert_into_database(self, data: list):
+        destination = self.config.get("output", "destination", fallback="database")
+        
+        if destination == "database":
+            await self._insert_into_database_db(data)
+        else:
+            await self._insert_into_txt_file(data)
+
+    async def _insert_into_database_db(self, data: list):
+        """Sauvegarde dans la base de données MariaDB"""
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
                 for player in data:
@@ -79,6 +94,22 @@ class gatewayAPI:
                         print(f'[💾] Registered : {player["username"]}')
                     except Exception as e:
                         print(f"[⚠️] Insertion failure: {player.get('playfab_id', '?')} -> {str(e)}")
+
+    async def _insert_into_txt_file(self, data: list):
+        """Sauvegarde dans un fichier txt"""
+        txt_file_path = self.config.get("output", "txt_file", fallback="configurations/saved_playfabids.txt")
+        
+        try:
+            with open(txt_file_path, "a", encoding="utf-8") as f:
+                for player in data:
+                    try:
+                        player_json = json.dumps(player, ensure_ascii=False)
+                        f.write(player_json + "\n")
+                        print(f'[💾] Saved to file : {player["username"]}')
+                    except Exception as e:
+                        print(f"[⚠️] Save failure: {player.get('playfab_id', '?')} -> {str(e)}")
+        except Exception as e:
+            print(f"[❌] Error writing to file {txt_file_path}: {str(e)}")
 
     async def close(self):
         if self.pool:
