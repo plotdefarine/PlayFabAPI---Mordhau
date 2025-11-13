@@ -40,23 +40,51 @@ class PlayFabFetcher:
             return json.load(f).get("InfoRequestParameters", {})
 
     async def fetch_single_player(self, playfab_id: str) -> dict:
+        logger = logging.getLogger("playfab.fetcher")
         url = f"https://{self.title_id.lower()}.playfabapi.com/Client/GetPlayerCombinedInfo"
+
+        # Prepare headers but avoid logging the session ticket
         headers = {
             "Content-Type": "application/json",
-            "X-Authorization": self.session_ticket
+            "X-Authorization": "<redacted>"
         }
         payload = {
             "PlayFabId": playfab_id,
             "InfoRequestParameters": self.parameters
         }
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, json=payload) as response:
-                if response.status == 200:
-                    return await response.json()
-                else:
-                    data = await response.json()
-                    raise Exception(data.get("errorMessage", "Erreur inconnue"))
+        # Log request start (INFO) and details at DEBUG
+        logger.info(f"Requesting PlayFab data for PlayFabId={playfab_id}")
+        logger.debug(f"POST {url} payload={json.dumps(payload)}")
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                start = __import__("time").perf_counter()
+                async with session.post(url, headers={"Content-Type": "application/json", "X-Authorization": self.session_ticket}, json=payload) as response:
+                    elapsed = __import__("time").perf_counter() - start
+                    status = response.status
+                    text = await response.text()
+
+                    logger.info(f"PlayFabId={playfab_id} -> status={status} time={elapsed:.3f}s")
+                    logger.debug(f"Response text (truncated): {text[:1000]}")
+
+                    if status == 200:
+                        return await response.json()
+                    else:
+                        # Try parse JSON error message
+                        try:
+                            data = json.loads(text)
+                            err = data.get("errorMessage") or data.get("message") or str(data)
+                        except Exception:
+                            err = text[:1000]
+                        raise Exception(err)
+
+        except aiohttp.ClientError as e:
+            logger.exception(f"Network error while fetching PlayFabId={playfab_id}: {str(e)}")
+            raise
+        except Exception as e:
+            logger.exception(f"Error while fetching PlayFabId={playfab_id}: {str(e)}")
+            raise
 
     async def get_playfab_ids(self):
         # Choix de la source selon la config

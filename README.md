@@ -187,7 +187,31 @@ semaphore_limit = 12
 
 You can increase or decrease this value depending on your use case.
 
----
+
+## Logging
+
+This project writes runtime logs to `logs/app.log` (rotating file handler) and also prints to the console. You can control how verbose the logs are using the new `[logging]` section in `config.ini`.
+
+Add or edit the section like this:
+
+```ini
+[logging]
+# standard -> INFO to console + INFO to file (default)
+# medium   -> DEBUG to console + INFO to file
+# maximum  -> DEBUG to console + DEBUG to file
+log_level = standard
+```
+
+Meaning of levels:
+- `standard` (default) — console: INFO, file: INFO
+- `medium` — console: DEBUG, file: INFO
+- `maximum` — console: DEBUG, file: DEBUG
+
+Use `maximum` only for troubleshooting as it logs request/response bodies (truncated) and more details.
+
+Log file location and rotation:
+- File: `logs/app.log`
+- Rotation: 5 MB per file, up to 5 backups
 
 ## Security Best Practices
 
